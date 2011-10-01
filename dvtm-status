@@ -1,0 +1,17 @@
+#!/bin/bash
+FIFO="/tmp/dvtm-status.$$"
+[ -e "$FIFO" ] || mkfifo "$FIFO"
+chmod 600 $FIFO
+while true; do
+        a=`date '+%d.%m.%Y %H:%M'`
+        b=`hostname`
+        c=`uptime | sed -e 's/^.*\\(load\\) average/\\1/' -e 's/, */|/g'`
+        printf "%s    %s    %s" "$b" "$c" "$a"
+#        printf "%s    %s    %s" "$a" "$b" "$c"
+        sleep 10
+done > $FIFO &
+STATUS_PID=$!
+export ESCDELAY=25
+dvtm -s $FIFO "$@" 2> /dev/null
+kill $STATUS_PID
+rm $FIFO
